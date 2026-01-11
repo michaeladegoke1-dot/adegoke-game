@@ -3,180 +3,206 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Adegoke: Chopper Sabotage Mobile</title>
+    <title>Adegoke: Rhythm Sabotage</title>
     <style>
-        * { box-sizing: border-box; touch-action: none; }
-        body { margin: 0; background: #050505; color: #D4AF37; font-family: sans-serif; overflow: hidden; height: 100vh; display: flex; flex-direction: column; }
+        * { box-sizing: border-box; touch-action: none; -webkit-tap-highlight-color: transparent; }
+        body { 
+            margin: 0; background: #000; color: #D4AF37; font-family: 'Courier New', Courier, monospace; 
+            overflow: hidden; height: 100vh; width: 100vw; display: flex; flex-direction: column; 
+        }
         
         #game-container { 
             position: relative; width: 100%; flex-grow: 1; background: #111; 
             border-bottom: 4px solid #D4AF37; overflow: hidden; 
         }
-        
-        /* The Chopper & Michael */
-        #chopper-group { position: absolute; transition: transform 0.1s; z-index: 10; width: 80px; height: 120px; }
-        #chopper { width: 80px; height: 40px; background: #333; border-radius: 10px; border: 2px solid #555; }
-        #blades { position: absolute; top: -5px; width: 80px; height: 5px; background: #888; animation: spin 0.1s linear infinite; }
-        #rope { position: absolute; top: 40px; left: 39px; width: 2px; height: 40px; background: #666; }
-        #michael { position: absolute; top: 80px; left: 20px; font-size: 40px; }
-        
+
+        /* Chopper Unit */
+        #chopper-unit { 
+            position: absolute; width: 80px; height: 120px; 
+            left: 50px; top: 100px; z-index: 10; pointer-events: none;
+        }
+        #chopper-body { width: 80px; height: 40px; background: #333; border: 2px solid #D4AF37; border-radius: 10px; }
+        #rotor { 
+            position: absolute; top: -5px; width: 80px; height: 4px; 
+            background: #888; animation: spin 0.1s linear infinite; 
+        }
+        #cable { position: absolute; top: 40px; left: 39px; width: 2px; height: 40px; background: #D4AF37; }
+        #michael-sprite { position: absolute; top: 75px; left: 15px; font-size: 45px; }
+
         @keyframes spin { from { transform: scaleX(1); } to { transform: scaleX(-1); } }
 
-        /* Game Elements */
-        .bullet { position: absolute; width: 12px; height: 12px; background: gold; border-radius: 50%; box-shadow: 0 0 10px gold; }
-        .bad-dancer { position: absolute; font-size: 40px; z-index: 5; }
-        
-        /* UI & Facts */
-        #ui { position: absolute; top: 10px; left: 10px; z-index: 100; font-weight: bold; font-size: 14px; pointer-events: none; }
-        #fact-ticker { background: #D4AF37; color: #000; padding: 5px; font-size: 12px; text-align: center; font-weight: bold; }
-        
-        #overlay { 
-            position: absolute; inset: 0; background: rgba(0,0,0,0.9); 
+        .note-projectile { position: absolute; width: 15px; height: 15px; background: gold; border-radius: 50%; box-shadow: 0 0 10px gold; z-index: 15; }
+        .enemy-dancer { position: absolute; font-size: 40px; z-index: 5; transition: left 0.05s linear; }
+
+        #hud { position: absolute; top: 10px; left: 10px; z-index: 100; font-weight: bold; background: rgba(0,0,0,0.5); padding: 5px; }
+        #ticker { background: #D4AF37; color: #000; padding: 8px; font-weight: bold; font-size: 14px; text-align: center; }
+
+        #menu { 
+            position: absolute; inset: 0; background: rgba(0,0,0,0.95); 
             display: flex; flex-direction: column; align-items: center; justify-content: center; 
-            z-index: 200; text-align: center; padding: 20px;
+            z-index: 1000; text-align: center; padding: 30px;
         }
-        button { background: #D4AF37; border: none; padding: 20px 40px; font-weight: bold; font-size: 20px; border-radius: 10px; }
+        .start-btn { 
+            background: #D4AF37; color: #000; border: none; padding: 20px 50px; 
+            font-size: 24px; font-weight: bold; border-radius: 10px; cursor: pointer; 
+        }
     </style>
 </head>
-<body oncontextmenu="return false;">
+<body>
 
     <div id="game-container">
-        <div id="ui">SCORE: <span id="score">0</span></div>
+        <div id="hud">SCORE: <span id="score">0</span></div>
         
-        <div id="overlay">
-            <h2 style="color:gold">MICHAEL ADEGOKE</h2>
-            <p style="color:white">TAP SIDES TO FLY | TAP CENTER TO SHOOT</p>
-            <button onclick="startGame()">START MISSION</button>
+        <div id="menu">
+            <h1 style="color:#D4AF37; margin-bottom: 5px;">MICHAEL ADEGOKE</h1>
+            <h2 style="color:white; margin-top: 0;">RHYTHM SABOTAGE</h2>
+            <p style="color:#ccc;">DRAG to Fly Michael<br>TAP to Shoot Bad Dancers</p>
+            <button class="start-btn" id="start-btn">ENGAGE CHOPPER</button>
         </div>
 
-        <div id="chopper-group">
-            <div id="blades"></div>
-            <div id="chopper"></div>
-            <div id="rope"></div>
-            <div id="michael">🕺🏾</div>
+        <div id="chopper-unit">
+            <div id="rotor"></div>
+            <div id="chopper-body"></div>
+            <div id="cable"></div>
+            <div id="michael-sprite">🕺🏾</div>
         </div>
     </div>
 
-    <div id="fact-ticker">5X US REGIONAL SHOWDANCE CHAMPION MICHAEL ADEGOKE</div>
+    <div id="ticker">MICHAEL ADEGOKE: 5X US REGIONAL CHAMPION & CHOREOGRAPHER</div>
 
 <script>
     const container = document.getElementById('game-container');
-    const chopper = document.getElementById('chopper-group');
-    const scoreEl = document.getElementById('score');
-    const ticker = document.getElementById('fact-ticker');
-    const overlay = document.getElementById('overlay');
+    const player = document.getElementById('chopper-unit');
+    const scoreVal = document.getElementById('score');
+    const menu = document.getElementById('menu');
+    const ticker = document.getElementById('ticker');
 
-    let pX = 50, pY = 100, score = 0, active = false;
-    let bullets = [], enemies = [];
-    let touchX = null, touchY = null;
-
-    const facts = [
+    let pX = 50, pY = 100;
+    let score = 0, active = false;
+    let notes = [], enemies = [];
+    
+    const achievements = [
         "5X US REGIONAL SHOWDANCE CHAMPION",
-        "WORLD FINALIST BALLROOM DANCER",
+        "WORLD-CLASS BALLROOM CHOREOGRAPHER",
         "FOUNDER OF MICHAEL ADEGOKE DANCE STUDIO",
-        "CELEBRITY CHOREOGRAPHER & TRAINER",
-        "LEGEND OF INTERNATIONAL BALLROOM"
+        "INTERNATIONAL DANCE LEGEND",
+        "CHAMPION OF RHYTHMIC EXCELLENCE"
     ];
 
-    // Mobile Sound Context
+    // Mobile Audio Fix
     const AudioContext = window.AudioContext || window.webkitAudioContext;
-    const ctx = new AudioContext();
+    const audioCtx = new AudioContext();
 
-    function playSnd(f, t, v, d) {
-        const o = ctx.createOscillator();
-        const g = ctx.createGain();
-        o.connect(g); g.connect(ctx.destination);
+    function tone(f, t, v, d) {
+        if (audioCtx.state === 'suspended') audioCtx.resume();
+        const o = audioCtx.createOscillator();
+        const g = audioCtx.createGain();
+        o.connect(g); g.connect(audioCtx.destination);
         o.type = t; o.frequency.value = f;
-        g.gain.setValueAtTime(v, ctx.currentTime);
-        g.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + d);
-        o.start(); o.stop(ctx.currentTime + d);
+        g.gain.setValueAtTime(v, audioCtx.currentTime);
+        g.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + d);
+        o.start(); o.stop(audioCtx.currentTime + d);
     }
 
-    function startGame() {
-        ctx.resume();
-        overlay.style.display = 'none';
-        active = true; score = 0; scoreEl.innerText = score;
-        loop(); spawnEnemy();
-    }
+    document.getElementById('start-btn').addEventListener('click', (e) => {
+        e.stopPropagation();
+        active = true;
+        menu.style.display = 'none';
+        score = 0;
+        scoreVal.innerText = "0";
+        if (container.requestFullscreen) container.requestFullscreen();
+        gameLoop();
+        spawnEnemy();
+    });
 
-    // Touch Controls
-    container.addEventListener('touchstart', (e) => {
-        if(!active) return;
-        const touch = e.touches[0];
+    // Unified Input (Touch + Mouse)
+    const handleMove = (e) => {
+        if (!active) return;
+        const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+        const clientY = e.touches ? e.touches[0].clientY : e.clientY;
         const rect = container.getBoundingClientRect();
-        touchX = touch.clientX - rect.left;
-        touchY = touch.clientY - rect.top;
+        pX = clientX - rect.left - 40;
+        pY = clientY - rect.top - 20;
+    };
 
-        // Shoot logic: Tap middle to shoot
-        if (touchX > rect.width * 0.3 && touchX < rect.width * 0.7) {
-            shoot();
-        }
-    }, {passive: false});
+    const handleShoot = (e) => {
+        if (!active) return;
+        tone(500, 'sine', 0.1, 0.2);
+        const n = document.createElement('div');
+        n.className = 'note-projectile';
+        n.style.left = (pX + 60) + 'px';
+        n.style.top = (pY + 95) + 'px';
+        container.appendChild(n);
+        notes.push({ el: n, x: pX + 60, y: pY + 95 });
+    };
 
-    container.addEventListener('touchmove', (e) => {
-        if(!active) return;
-        const touch = e.touches[0];
-        const rect = container.getBoundingClientRect();
-        pX = touch.clientX - rect.left - 40;
-        pY = touch.clientY - rect.top - 40;
-        e.preventDefault();
-    }, {passive: false});
-
-    function shoot() {
-        playSnd(600, 'sine', 0.1, 0.2);
-        const b = document.createElement('div');
-        b.className = 'bullet';
-        b.style.left = (pX + 60) + 'px';
-        b.style.top = (pY + 100) + 'px';
-        container.appendChild(b);
-        bullets.push({ el: b, x: pX + 60, y: pY + 100 });
-    }
+    container.addEventListener('mousemove', handleMove);
+    container.addEventListener('touchmove', (e) => { handleMove(e); e.preventDefault(); }, {passive: false});
+    container.addEventListener('mousedown', handleShoot);
+    container.addEventListener('touchstart', (e) => { handleShoot(e); e.preventDefault(); }, {passive: false});
 
     function spawnEnemy() {
-        if(!active) return;
+        if (!active) return;
         const e = document.createElement('div');
-        e.className = 'bad-dancer';
-        e.innerHTML = ['🧟','🤡','👎'][Math.floor(Math.random()*3)];
+        e.className = 'enemy-dancer';
+        e.innerHTML = ['🧟','🤡','👎','💩'][Math.floor(Math.random()*4)];
         e.style.left = window.innerWidth + 'px';
-        e.style.top = (Math.random() * (window.innerHeight - 150) + 50) + 'px';
+        e.style.top = (Math.random() * (window.innerHeight - 180) + 20) + 'px';
         container.appendChild(e);
         enemies.push({ el: e, x: window.innerWidth, y: parseFloat(e.style.top) });
-        setTimeout(spawnEnemy, 1500 - Math.min(score * 5, 1000));
+        setTimeout(spawnEnemy, Math.max(400, 1500 - (score * 5)));
     }
 
-    function loop() {
-        if(!active) return;
-        chopper.style.left = pX + 'px';
-        chopper.style.top = pY + 'px';
+    function gameLoop() {
+        if (!active) return;
 
-        bullets.forEach((b, i) => {
-            b.x += 10; b.el.style.left = b.x + 'px';
-            if(b.x > window.innerWidth) { b.el.remove(); bullets.splice(i, 1); }
-        });
+        player.style.left = pX + 'px';
+        player.style.top = pY + 'px';
 
-        enemies.forEach((e, i) => {
-            e.x -= 4; e.el.style.left = e.x + 'px';
-            bullets.forEach((b, bi) => {
-                if(Math.abs(b.x - e.x) < 40 && Math.abs(b.y - e.y) < 40){
-                    playSnd(150, 'sawtooth', 0.1, 0.2);
+        // Update Projectiles
+        for (let i = notes.length - 1; i >= 0; i--) {
+            let n = notes[i];
+            n.x += 12;
+            n.el.style.left = n.x + 'px';
+            if (n.x > window.innerWidth) { n.el.remove(); notes.splice(i, 1); }
+        }
+
+        // Update Enemies
+        for (let i = enemies.length - 1; i >= 0; i--) {
+            let e = enemies[i];
+            e.x -= (4 + score/100);
+            e.el.style.left = e.x + 'px';
+
+            // Collision with Note
+            notes.forEach((n, ni) => {
+                if (Math.abs(n.x - e.x) < 40 && Math.abs(n.y - e.y) < 40) {
+                    tone(150, 'square', 0.1, 0.1);
                     e.el.remove(); enemies.splice(i, 1);
-                    b.el.remove(); bullets.splice(bi, 1);
-                    score += 10; scoreEl.innerText = score;
-                    if(score % 50 === 0) ticker.innerText = facts[Math.floor(Math.random()*facts.length)];
+                    n.el.remove(); notes.splice(ni, 1);
+                    score += 10;
+                    scoreVal.innerText = score;
+                    if (score % 50 === 0) ticker.innerText = achievements[Math.floor(Math.random()*achievements.length)];
                 }
             });
-            if(e.x < -50) { e.el.remove(); enemies.splice(i, 1); }
-            if(Math.abs(e.x - (pX+40)) < 40 && Math.abs(e.y - (pY+80)) < 60) active = false;
-        });
 
-        if(active) requestAnimationFrame(loop);
-        else showGameOver();
+            // Collision with Michael
+            if (Math.abs(e.x - (pX+40)) < 40 && Math.abs(e.y - (pY+80)) < 50) gameOver();
+
+            if (e.x < -60) { e.el.remove(); enemies.splice(i, 1); }
+        }
+
+        requestAnimationFrame(gameLoop);
     }
 
-    function showGameOver() {
-        playSnd(50, 'square', 0.2, 0.5);
-        overlay.style.display = 'flex';
-        overlay.innerHTML = `<h1 style="color:red">RETIRED</h1><p>Score: ${score}</p><button onclick="location.reload()">RE-DANCE</button>`;
+    function gameOver() {
+        active = false;
+        tone(60, 'sawtooth', 0.2, 0.5);
+        menu.style.display = 'flex';
+        menu.innerHTML = `
+            <h1 style="color:red">MISSION FAILED</h1>
+            <p style="color:white">Score: ${score}</p>
+            <button class="start-btn" onclick="location.reload()">RE-INITIALIZE</button>
+        `;
     }
 </script>
 </body>
