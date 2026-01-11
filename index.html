@@ -3,49 +3,29 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Adegoke: Rhythm Sabotage</title>
+    <title>Adegoke: Sabotage Pro</title>
     <style>
-        * { box-sizing: border-box; touch-action: none; -webkit-tap-highlight-color: transparent; }
-        body { 
-            margin: 0; background: #000; color: #D4AF37; font-family: 'Courier New', Courier, monospace; 
-            overflow: hidden; height: 100vh; width: 100vw; display: flex; flex-direction: column; 
-        }
+        * { box-sizing: border-box; touch-action: none; -webkit-tap-highlight-color: transparent; user-select: none; }
+        body { margin: 0; background: #000; color: gold; font-family: 'Courier New', monospace; overflow: hidden; height: 100vh; display: flex; flex-direction: column; }
         
-        #game-container { 
-            position: relative; width: 100%; flex-grow: 1; background: #111; 
-            border-bottom: 4px solid #D4AF37; overflow: hidden; 
-        }
-
-        /* Chopper Unit */
-        #chopper-unit { 
-            position: absolute; width: 80px; height: 120px; 
-            left: 50px; top: 100px; z-index: 10; pointer-events: none;
-        }
-        #chopper-body { width: 80px; height: 40px; background: #333; border: 2px solid #D4AF37; border-radius: 10px; }
-        #rotor { 
-            position: absolute; top: -5px; width: 80px; height: 4px; 
-            background: #888; animation: spin 0.1s linear infinite; 
-        }
-        #cable { position: absolute; top: 40px; left: 39px; width: 2px; height: 40px; background: #D4AF37; }
-        #michael-sprite { position: absolute; top: 75px; left: 15px; font-size: 45px; }
-
+        #game-container { position: relative; width: 100%; flex-grow: 1; background: #111; border: 4px solid gold; overflow: hidden; }
+        
+        /* Michael & Chopper */
+        #player-group { position: absolute; width: 80px; height: 120px; left: 50px; top: 50%; transform: translateY(-50%); z-index: 10; pointer-events: none; }
+        #chopper { width: 80px; height: 40px; background: #222; border: 2px solid gold; border-radius: 10px; }
+        #rotor { position: absolute; top: -5px; width: 80px; height: 4px; background: #666; animation: spin 0.1s linear infinite; }
+        #cable { position: absolute; top: 40px; left: 39px; width: 2px; height: 40px; background: gold; }
+        #michael { position: absolute; top: 75px; left: 15px; font-size: 45px; }
         @keyframes spin { from { transform: scaleX(1); } to { transform: scaleX(-1); } }
 
-        .note-projectile { position: absolute; width: 15px; height: 15px; background: gold; border-radius: 50%; box-shadow: 0 0 10px gold; z-index: 15; }
-        .enemy-dancer { position: absolute; font-size: 40px; z-index: 5; transition: left 0.05s linear; }
+        .note { position: absolute; width: 15px; height: 15px; background: gold; border-radius: 50%; box-shadow: 0 0 10px gold; z-index: 15; }
+        .bot { position: absolute; font-size: 40px; z-index: 5; }
 
-        #hud { position: absolute; top: 10px; left: 10px; z-index: 100; font-weight: bold; background: rgba(0,0,0,0.5); padding: 5px; }
-        #ticker { background: #D4AF37; color: #000; padding: 8px; font-weight: bold; font-size: 14px; text-align: center; }
+        #hud { position: absolute; top: 10px; left: 10px; z-index: 100; font-weight: bold; background: rgba(0,0,0,0.7); padding: 10px; border: 1px solid gold; }
+        #ticker { background: gold; color: #000; padding: 10px; font-weight: bold; text-align: center; font-size: 14px; text-transform: uppercase; }
 
-        #menu { 
-            position: absolute; inset: 0; background: rgba(0,0,0,0.95); 
-            display: flex; flex-direction: column; align-items: center; justify-content: center; 
-            z-index: 1000; text-align: center; padding: 30px;
-        }
-        .start-btn { 
-            background: #D4AF37; color: #000; border: none; padding: 20px 50px; 
-            font-size: 24px; font-weight: bold; border-radius: 10px; cursor: pointer; 
-        }
+        #overlay { position: absolute; inset: 0; background: rgba(0,0,0,0.9); display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 1000; text-align: center; }
+        .btn { background: gold; color: #000; border: none; padding: 20px 40px; font-size: 20px; font-weight: bold; cursor: pointer; border-radius: 10px; }
     </style>
 </head>
 <body>
@@ -53,156 +33,135 @@
     <div id="game-container">
         <div id="hud">SCORE: <span id="score">0</span></div>
         
-        <div id="menu">
-            <h1 style="color:#D4AF37; margin-bottom: 5px;">MICHAEL ADEGOKE</h1>
-            <h2 style="color:white; margin-top: 0;">RHYTHM SABOTAGE</h2>
-            <p style="color:#ccc;">DRAG to Fly Michael<br>TAP to Shoot Bad Dancers</p>
-            <button class="start-btn" id="start-btn">ENGAGE CHOPPER</button>
+        <div id="overlay">
+            <h1 style="margin:0">MICHAEL ADEGOKE</h1>
+            <h3 style="color:white">CHOPPER SABOTAGE</h3>
+            <p style="color:#aaa">DRAG TO FLY | TAP/CLICK TO SHOOT</p>
+            <button class="btn" onclick="start()">START DANCE</button>
         </div>
 
-        <div id="chopper-unit">
+        <div id="player-group">
             <div id="rotor"></div>
-            <div id="chopper-body"></div>
+            <div id="chopper"></div>
             <div id="cable"></div>
-            <div id="michael-sprite">🕺🏾</div>
+            <div id="michael">🕺🏾</div>
         </div>
     </div>
 
-    <div id="ticker">MICHAEL ADEGOKE: 5X US REGIONAL CHAMPION & CHOREOGRAPHER</div>
+    <div id="ticker">MICHAEL ADEGOKE: WORLD-CLASS CHOREOGRAPHER & STUDIO FOUNDER</div>
 
 <script>
     const container = document.getElementById('game-container');
-    const player = document.getElementById('chopper-unit');
-    const scoreVal = document.getElementById('score');
-    const menu = document.getElementById('menu');
+    const player = document.getElementById('player-group');
+    const scoreEl = document.getElementById('score');
+    const overlay = document.getElementById('overlay');
     const ticker = document.getElementById('ticker');
 
-    let pX = 50, pY = 100;
-    let score = 0, active = false;
-    let notes = [], enemies = [];
+    let pX = 50, pY = 200, score = 0, active = false;
+    let bullets = [], enemies = [];
     
-    const achievements = [
+    const facts = [
         "5X US REGIONAL SHOWDANCE CHAMPION",
-        "WORLD-CLASS BALLROOM CHOREOGRAPHER",
-        "FOUNDER OF MICHAEL ADEGOKE DANCE STUDIO",
-        "INTERNATIONAL DANCE LEGEND",
-        "CHAMPION OF RHYTHMIC EXCELLENCE"
+        "WORLD FINALIST BALLROOM DANCER",
+        "FOUNDER: MICHAEL ADEGOKE DANCE STUDIO",
+        "EXPERT CHOREOGRAPHER FOR TV & STAGE",
+        "LEGACY OF 20+ YEARS IN DANCE"
     ];
 
-    // Mobile Audio Fix
-    const AudioContext = window.AudioContext || window.webkitAudioContext;
-    const audioCtx = new AudioContext();
-
-    function tone(f, t, v, d) {
-        if (audioCtx.state === 'suspended') audioCtx.resume();
-        const o = audioCtx.createOscillator();
-        const g = audioCtx.createGain();
-        o.connect(g); g.connect(audioCtx.destination);
-        o.type = t; o.frequency.value = f;
-        g.gain.setValueAtTime(v, audioCtx.currentTime);
-        g.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + d);
-        o.start(); o.stop(audioCtx.currentTime + d);
+    // UNIVERSAL SOUND (Works on Mobile after first click)
+    const AudioCtx = window.AudioContext || window.webkitAudioContext;
+    let audio = null;
+    function playTone(freq, type, vol, dur) {
+        if(!audio) audio = new AudioCtx();
+        if(audio.state === 'suspended') audio.resume();
+        const o = audio.createOscillator();
+        const g = audio.createGain();
+        o.connect(g); g.connect(audio.destination);
+        o.type = type; o.frequency.value = freq;
+        g.gain.setValueAtTime(vol, audio.currentTime);
+        g.gain.exponentialRampToValueAtTime(0.0001, audio.currentTime + dur);
+        o.start(); o.stop(audio.currentTime + dur);
     }
 
-    document.getElementById('start-btn').addEventListener('click', (e) => {
-        e.stopPropagation();
+    function start() {
+        overlay.style.display = 'none';
         active = true;
-        menu.style.display = 'none';
         score = 0;
-        scoreVal.innerText = "0";
-        if (container.requestFullscreen) container.requestFullscreen();
-        gameLoop();
+        scoreEl.innerText = score;
+        requestAnimationFrame(update);
         spawnEnemy();
+    }
+
+    // POINTER EVENTS (This is the fix: Handles Mouse and Touch together)
+    container.addEventListener('pointermove', (e) => {
+        if(!active) return;
+        const rect = container.getBoundingClientRect();
+        pX = e.clientX - rect.left - 40;
+        pY = e.clientY - rect.top - 20;
     });
 
-    // Unified Input (Touch + Mouse)
-    const handleMove = (e) => {
-        if (!active) return;
-        const clientX = e.touches ? e.touches[0].clientX : e.clientX;
-        const clientY = e.touches ? e.touches[0].clientY : e.clientY;
-        const rect = container.getBoundingClientRect();
-        pX = clientX - rect.left - 40;
-        pY = clientY - rect.top - 20;
-    };
-
-    const handleShoot = (e) => {
-        if (!active) return;
-        tone(500, 'sine', 0.1, 0.2);
-        const n = document.createElement('div');
-        n.className = 'note-projectile';
-        n.style.left = (pX + 60) + 'px';
-        n.style.top = (pY + 95) + 'px';
-        container.appendChild(n);
-        notes.push({ el: n, x: pX + 60, y: pY + 95 });
-    };
-
-    container.addEventListener('mousemove', handleMove);
-    container.addEventListener('touchmove', (e) => { handleMove(e); e.preventDefault(); }, {passive: false});
-    container.addEventListener('mousedown', handleShoot);
-    container.addEventListener('touchstart', (e) => { handleShoot(e); e.preventDefault(); }, {passive: false});
+    container.addEventListener('pointerdown', (e) => {
+        if(!active) return;
+        playTone(600, 'sine', 0.1, 0.2);
+        const b = document.createElement('div');
+        b.className = 'note';
+        b.style.left = (pX + 60) + 'px';
+        b.style.top = (pY + 95) + 'px';
+        container.appendChild(b);
+        bullets.push({ el: b, x: pX + 60, y: pY + 95 });
+    });
 
     function spawnEnemy() {
-        if (!active) return;
+        if(!active) return;
         const e = document.createElement('div');
-        e.className = 'enemy-dancer';
-        e.innerHTML = ['🧟','🤡','👎','💩'][Math.floor(Math.random()*4)];
+        e.className = 'bot';
+        e.innerHTML = ['🧟','🤡','👎'][Math.floor(Math.random()*3)];
         e.style.left = window.innerWidth + 'px';
-        e.style.top = (Math.random() * (window.innerHeight - 180) + 20) + 'px';
+        e.style.top = (Math.random() * (window.innerHeight - 200) + 50) + 'px';
         container.appendChild(e);
         enemies.push({ el: e, x: window.innerWidth, y: parseFloat(e.style.top) });
-        setTimeout(spawnEnemy, Math.max(400, 1500 - (score * 5)));
+        setTimeout(spawnEnemy, Math.max(500, 1500 - (score * 5)));
     }
 
-    function gameLoop() {
-        if (!active) return;
+    function update() {
+        if(!active) return;
 
         player.style.left = pX + 'px';
         player.style.top = pY + 'px';
 
-        // Update Projectiles
-        for (let i = notes.length - 1; i >= 0; i--) {
-            let n = notes[i];
-            n.x += 12;
-            n.el.style.left = n.x + 'px';
-            if (n.x > window.innerWidth) { n.el.remove(); notes.splice(i, 1); }
-        }
+        bullets.forEach((b, i) => {
+            b.x += 10;
+            b.el.style.left = b.x + 'px';
+            if(b.x > window.innerWidth) { b.el.remove(); bullets.splice(i, 1); }
+        });
 
-        // Update Enemies
-        for (let i = enemies.length - 1; i >= 0; i--) {
-            let e = enemies[i];
+        enemies.forEach((e, i) => {
             e.x -= (4 + score/100);
             e.el.style.left = e.x + 'px';
 
-            // Collision with Note
-            notes.forEach((n, ni) => {
-                if (Math.abs(n.x - e.x) < 40 && Math.abs(n.y - e.y) < 40) {
-                    tone(150, 'square', 0.1, 0.1);
+            bullets.forEach((b, bi) => {
+                if(Math.abs(b.x - e.x) < 40 && Math.abs(b.y - e.y) < 40) {
+                    playTone(150, 'square', 0.1, 0.1);
                     e.el.remove(); enemies.splice(i, 1);
-                    n.el.remove(); notes.splice(ni, 1);
+                    b.el.remove(); bullets.splice(bi, 1);
                     score += 10;
-                    scoreVal.innerText = score;
-                    if (score % 50 === 0) ticker.innerText = achievements[Math.floor(Math.random()*achievements.length)];
+                    scoreEl.innerText = score;
+                    if(score % 50 === 0) ticker.innerText = facts[Math.floor(Math.random()*facts.length)];
                 }
             });
 
-            // Collision with Michael
-            if (Math.abs(e.x - (pX+40)) < 40 && Math.abs(e.y - (pY+80)) < 50) gameOver();
+            if(Math.abs(e.x - (pX+40)) < 40 && Math.abs(e.y - (pY+80)) < 50) die();
+            if(e.x < -60) { e.el.remove(); enemies.splice(i, 1); }
+        });
 
-            if (e.x < -60) { e.el.remove(); enemies.splice(i, 1); }
-        }
-
-        requestAnimationFrame(gameLoop);
+        requestAnimationFrame(update);
     }
 
-    function gameOver() {
+    function die() {
         active = false;
-        tone(60, 'sawtooth', 0.2, 0.5);
-        menu.style.display = 'flex';
-        menu.innerHTML = `
-            <h1 style="color:red">MISSION FAILED</h1>
-            <p style="color:white">Score: ${score}</p>
-            <button class="start-btn" onclick="location.reload()">RE-INITIALIZE</button>
-        `;
+        playTone(50, 'sawtooth', 0.2, 0.5);
+        overlay.style.display = 'flex';
+        overlay.innerHTML = `<h1 style="color:red">RETIRED</h1><p>SCORE: ${score}</p><button class="btn" onclick="location.reload()">TRY AGAIN</button>`;
     }
 </script>
 </body>
